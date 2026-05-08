@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"regexp"
 	"strings"
 )
 
@@ -18,7 +17,7 @@ var defaultHeaders = map[string]string{
 }
 
 type DomainGroup struct {
-	patterns      []*regexp.Regexp
+	suffixes      []string
 	origin        string
 	referer       string
 	customHeaders map[string]string
@@ -29,7 +28,7 @@ var domainGroups []DomainGroup
 func init() {
 	domainGroups = []DomainGroup{
 		{
-			patterns: compileRegexes(`(?i)\.padorupado\.ru$`, `(?i)\.kwikie\.ru$`, `(?i)\.owocdn\.top$`),
+			suffixes: []string{".padorupado.ru", ".kwikie.ru", ".owocdn.top"},
 			origin:   "https://kwik.cx",
 			referer:  "https://kwik.cx/",
 			customHeaders: map[string]string{
@@ -38,7 +37,7 @@ func init() {
 			},
 		},
 		{
-			patterns: compileRegexes(`(?i)[a-z]+\d+.(pro|live|xyz|site|online|wiki)$`),
+			suffixes: []string{".pro", ".live", ".xyz", ".site", ".online", ".wiki"},
 			origin:   "https://rapid-cloud.co/",
 			referer:  "https://rapid-cloud.co/",
 			customHeaders: map[string]string{
@@ -47,77 +46,77 @@ func init() {
 			},
 		},
 		{
-			patterns: compileRegexes(`(?i)\.streamtape\.to$`),
+			suffixes: []string{".streamtape.to"},
 			origin:   "https://streamtape.to",
 			referer:  "https://streamtape.to/",
 		},
 		{
-			patterns: compileRegexes(`(?i)vidcache\.net$`),
+			suffixes: []string{"vidcache.net"},
 			origin:   "https://www.animegg.org",
 			referer:  "https://www.animegg.org/",
 		},
 		{
-			patterns: compileRegexes(`(?i)krussdomi\.com$`, `(?i)revolutionizingtheweb\.xyz$`, `(?i)nextgentechnologytrends\.xyz$`, `(?i)smartinvestmentstrategies\.xyz$`, `(?i)creativedesignstudioxyz\.xyz$`, `(?i)breakingdigitalboundaries\.xyz$`, `(?i)ultimatetechinnovation\.xyz$`),
+			suffixes: []string{"krussdomi.com", "revolutionizingtheweb.xyz", "nextgentechnologytrends.xyz", "smartinvestmentstrategies.xyz", "creativedesignstudioxyz.xyz", "breakingdigitalboundaries.xyz", "ultimatetechinnovation.xyz"},
 			origin:   "https://krussdomi.com",
 			referer:  "https://krussdomi.com/",
 		},
 		{
-			patterns: compileRegexes(`(?i)\.akamaized\.net$`),
+			suffixes: []string{".akamaized.net"},
 			origin:   "https://players.akamai.com",
 			referer:  "https://players.akamai.com/",
 		},
 		{
-			patterns: compileRegexes(`(?i)(?:^|\.)shadowlandschronicles\.`, `(?i)digitalshinecollective\.xyz$`, `(?i)thrivequesthub\.xyz$`, `(?i)novaedgelabs\.xyz$`),
+			suffixes: []string{"shadowlandschronicles.", "digitalshinecollective.xyz", "thrivequesthub.xyz", "novaedgelabs.xyz"},
 			origin:   "https://cloudnestra.com",
 			referer:  "https://cloudnestra.com/",
 		},
 		{
-			patterns: compileRegexes(`(?i)(?:^|\.)viddsn\.`, `(?i)\.anilike\.cyou$`),
+			suffixes: []string{"viddsn.", ".anilike.cyou"},
 			origin:   "https://vidwish.live/",
 			referer:  "https://vidwish.live/",
 		},
 		{
-			patterns: compileRegexes(`(?i)(?:^|\.)dotstream\.`, `(?i)(?:^|\.)playcloud1\.`),
+			suffixes: []string{"dotstream.", "playcloud1."},
 			origin:   "https://megaplay.buzz/",
 			referer:  "https://megaplay.buzz/",
 		},
 		{
-			patterns: compileRegexes(`(?i)\.cloudfront\.net$`),
+			suffixes: []string{".cloudfront.net"},
 			origin:   "https://d2zihajmogu5jn.cloudfront.net",
 			referer:  "https://d2zihajmogu5jn.cloudfront.net/",
 		},
 		{
-			patterns: compileRegexes(`(?i)\.ttvnw\.net$`),
+			suffixes: []string{".ttvnw.net"},
 			origin:   "https://www.twitch.tv",
 			referer:  "https://www.twitch.tv/",
 		},
 		{
-			patterns: compileRegexes(`(?i)\.xx\.fbcdn\.net$`),
+			suffixes: []string{".xx.fbcdn.net"},
 			origin:   "https://www.facebook.com",
 			referer:  "https://www.facebook.com/",
 		},
 		{
-			patterns: compileRegexes(`(?i)\.anih1\.top$`, `(?i)\.xyk3\.top$`),
+			suffixes: []string{".anih1.top", ".xyk3.top"},
 			origin:   "https://ee.anih1.top",
 			referer:  "https://ee.anih1.top/",
 		},
 		{
-			patterns: compileRegexes(`(?i)\.premilkyway\.com$`),
+			suffixes: []string{".premilkyway.com"},
 			origin:   "https://uqloads.xyz",
 			referer:  "https://uqloads.xyz/",
 		},
 		{
-			patterns: compileRegexes(`(?i)\.streamcdn\.com$`, `(?i)\.mediacache\.cc$`),
+			suffixes: []string{".streamcdn.com", ".mediacache.cc"},
 			origin:   "https://anime.uniquestream.net",
 			referer:  "https://anime.uniquestream.net/",
 		},
 		{
-			patterns: compileRegexes(`(?i)\.raffaellocdn\.net$`, `(?i)\.feetcdn\.com$`, `(?i)clearskydrift45\.site$`),
+			suffixes: []string{".raffaellocdn.net", ".feetcdn.com", "clearskydrift45.site"},
 			origin:   "https://kerolaunochan.online",
 			referer:  "https://kerolaunochan.online/",
 		},
 		{
-			patterns: compileRegexes(`(?i)dewbreeze84\.online$`, `(?i)cloudydrift38\.site$`, `(?i)sunshinerays93\.live$`, `(?i)clearbluesky72\.wiki$`, `(?i)breezygale56\.online$`, `(?i)frostbite27\.pro$`, `(?i)frostywinds57\.live$`, `(?i)icyhailstorm64\.wiki$`, `(?i)icyhailstorm29\.online$`, `(?i)windflash93\.xyz$`, `(?i)stormdrift27\.site$`, `(?i)tempestcloud61\.wiki$`, `(?i)sunburst66\.pro$`, `(?i)douvid\.xyz$`),
+			suffixes: []string{"dewbreeze84.online", "cloudydrift38.site", "sunshinerays93.live", "clearbluesky72.wiki", "breezygale56.online", "frostbite27.pro", "frostywinds57.live", "icyhailstorm64.wiki", "icyhailstorm29.online", "windflash93.xyz", "stormdrift27.site", "tempestcloud61.wiki", "sunburst66.pro", "douvid.xyz"},
 			origin:   "https://megacloud.blog",
 			referer:  "https://megacloud.blog/",
 			customHeaders: map[string]string{
@@ -126,74 +125,66 @@ func init() {
 			},
 		},
 		{
-			patterns: compileRegexes(`(?i)\.echovideo\.to$`),
+			suffixes: []string{".echovideo.to"},
 			origin:   "https://aniwave.se",
 			referer:  "https://aniwave.se/",
 		},
 		{
-			patterns: compileRegexes(`(?i)\.vid-cdn\.xyz$`),
+			suffixes: []string{".vid-cdn.xyz"},
 			origin:   "https://anizone.to/",
 			referer:  "https://anizone.to/",
 		},
 		{
-			patterns: compileRegexes(`(?i)\.1stkmgv1\.com$`),
+			suffixes: []string{".1stkmgv1.com"},
 			origin:   "https://animeyy.com",
 			referer:  "https://animeyy.com/",
 		},
 		{
-			patterns: compileRegexes(`(?i)lightningspark77\.pro$`, `(?i)thunderwave48\.xyz$`, `(?i)stormwatch95\.site$`, `(?i)windyrays29\.online$`, `(?i)thunderstrike77\.online$`, `(?i)lightningflash39\.live$`, `(?i)cloudburst82\.xyz$`, `(?i)drizzleshower19\.site$`, `(?i)rainstorm92\.xyz$`),
+			suffixes: []string{"lightningspark77.pro", "thunderwave48.xyz", "stormwatch95.site", "windyrays29.online", "thunderstrike77.online", "lightningflash39.live", "cloudburst82.xyz", "drizzleshower19.site", "rainstorm92.xyz"},
 			origin:   "https://megacloud.club",
 			referer:  "https://megacloud.club/",
 		},
 		{
-			patterns: compileRegexes(`(?i)cloudburst99\.xyz$`, `(?i)frostywinds73\.pro$`, `(?i)stormwatch39\.live$`, `(?i)sunnybreeze16\.live$`, `(?i)mistydawn62\.pro$`, `(?i)lightningbolt21\.live$`, `(?i)gentlebreeze85\.xyz$`),
+			suffixes: []string{"cloudburst99.xyz", "frostywinds73.pro", "stormwatch39.live", "sunnybreeze16.live", "mistydawn62.pro", "lightningbolt21.live", "gentlebreeze85.xyz"},
 			origin:   "https://videostr.net",
 			referer:  "https://videostr.net/",
 		},
 		{
-			patterns: compileRegexes(`(?i)vmeas\.cloud$`),
+			suffixes: []string{"vmeas.cloud"},
 			origin:   "https://vidmoly.to",
 			referer:  "https://vidmoly.to/",
 		},
 		{
-			patterns: compileRegexes(`(?i)nextwaveinitiative\.xyz$`),
+			suffixes: []string{"nextwaveinitiative.xyz"},
 			origin:   "https://edgedeliverynetwork.org",
 			referer:  "https://edgedeliverynetwork.org/",
 		},
 		{
-			patterns: compileRegexes(`(?i)lightningbolts\.ru$`, `(?i)lightningbolt\.site$`, `(?i)vyebzzqlojvrl\.top$`),
+			suffixes: []string{"lightningbolts.ru", "lightningbolt.site", "vyebzzqlojvrl.top"},
 			origin:   "https://vidsrc.cc",
 			referer:  "https://vidsrc.cc/",
 		},
 		{
-			patterns: compileRegexes(`(?i)vidlvod\.store$`),
+			suffixes: []string{"vidlvod.store"},
 			origin:   "https://vidlink.pro",
 			referer:  "https://vidlink.pro/",
 		},
 		{
-			patterns: compileRegexes(`(?i)heatwave90\.pro$`, `(?i)humidmist27\.wiki$`, `(?i)frozenbreeze65\.live$`, `(?i)drizzlerain73\.online$`, `(?i)sunrays81\.xyz$`),
+			suffixes: []string{"heatwave90.pro", "humidmist27.wiki", "frozenbreeze65.live", "drizzlerain73.online", "sunrays81.xyz"},
 			origin:   "https://kerolaunochan.live",
 			referer:  "https://kerolaunochan.live/",
 		},
 		{
-			patterns: compileRegexes(`(?i)\.vkcdn5\.com$`),
+			suffixes: []string{".vkcdn5.com"},
 			origin:   "https://vkspeed.com",
 			referer:  "https://vkspeed.com/",
 		},
 		{
-			patterns: compileRegexes(`(?i)embed\.su$`, `(?i)usbigcdn\.cc$`, `(?i)\.congacdn\.cc$`),
+			suffixes: []string{"embed.su", "usbigcdn.cc", ".congacdn.cc"},
 			origin:   "https://embed.su",
 			referer:  "https://embed.su/",
 		},
 	}
-}
-
-func compileRegexes(patterns ...string) []*regexp.Regexp {
-	regexes := make([]*regexp.Regexp, len(patterns))
-	for i, pattern := range patterns {
-		regexes[i] = regexp.MustCompile(pattern)
-	}
-	return regexes
 }
 
 func GenerateHeadersForUrl(req *http.Request, targetUrl *url.URL, customOrigin string) {
@@ -209,12 +200,12 @@ func GenerateHeadersForUrl(req *http.Request, targetUrl *url.URL, customOrigin s
 		}
 		req.Header.Set("referer", referer)
 	} else {
-		hostname := targetUrl.Hostname()
+		hostname := strings.ToLower(targetUrl.Hostname())
 		matched := false
 
 		for _, group := range domainGroups {
-			for _, re := range group.patterns {
-				if re.MatchString(hostname) {
+			for _, suffix := range group.suffixes {
+				if strings.HasSuffix(hostname, suffix) {
 					req.Header.Set("origin", group.origin)
 					req.Header.Set("referer", group.referer)
 					if group.customHeaders != nil {
@@ -234,7 +225,7 @@ func GenerateHeadersForUrl(req *http.Request, targetUrl *url.URL, customOrigin s
 		if !matched {
 			scheme := targetUrl.Scheme
 			if hostname != "" {
-				origin := fmt.Sprintf("%s://%s", scheme, hostname)
+				origin := fmt.Sprintf("%s://%s", scheme, targetUrl.Hostname())
 				req.Header.Set("origin", origin)
 				referer := fmt.Sprintf("%s/", origin)
 				req.Header.Set("referer", referer)

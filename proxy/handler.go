@@ -17,17 +17,17 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-var forwardedHeaders = map[string]bool{
-	"content-type":     true,
-	"content-length":   true,
-	"content-range":    true,
-	"accept-ranges":    true,
-	"cache-control":    true,
-	"expires":          true,
-	"last-modified":    true,
-	"etag":             true,
-	"content-encoding": true,
-	"vary":             true,
+var forwardedHeaders = []string{
+	"Content-Type",
+	"Content-Length",
+	"Content-Range",
+	"Accept-Ranges",
+	"Cache-Control",
+	"Expires",
+	"Last-Modified",
+	"Etag",
+	"Content-Encoding",
+	"Vary",
 }
 
 func ProxyHandler(c *fiber.Ctx) error {
@@ -117,12 +117,9 @@ func ProxyHandler(c *fiber.Ctx) error {
 
 	c.Status(resp.StatusCode)
 
-	for key, values := range resp.Header {
-		k := strings.ToLower(key)
-		if forwardedHeaders[k] {
-			if len(values) > 0 {
-				c.Set(key, values[0])
-			}
+	for _, k := range forwardedHeaders {
+		if v := resp.Header.Get(k); v != "" {
+			c.Set(k, v)
 		}
 	}
 
