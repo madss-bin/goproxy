@@ -15,6 +15,8 @@ func init() {
 	t.MaxIdleConnsPerHost = 500
 	t.IdleConnTimeout = 60 * time.Second
 	t.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	t.ForceAttemptHTTP2 = false
+	t.TLSNextProto = make(map[string]func(authority string, c *tls.Conn) http.RoundTripper)
 
 	httpClient = &http.Client{
 		Transport: t,
