@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"crypto/tls"
+	"net"
 	"net/http"
 	"time"
 )
@@ -9,13 +10,21 @@ import (
 var httpClient *http.Client
 
 func init() {
-	t := http.DefaultTransport.(*http.Transport).Clone()
-	t.MaxIdleConns = 2000
-	t.MaxIdleConnsPerHost = 500
-	t.IdleConnTimeout = 60 * time.Second
-	t.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	t.ForceAttemptHTTP2 = false
-	t.TLSNextProto = make(map[string]func(authority string, c *tls.Conn) http.RoundTripper)
+	t := &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   10 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+		ForceAttemptHTTP2:     false,
+		MaxIdleConns:          2000,
+		MaxIdleConnsPerHost:   500,
+		IdleConnTimeout:       60 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+		ResponseHeaderTimeout: 10 * time.Second, // Prevents goroutine leaks if CDN hangs
+		TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
+	}
 
 	httpClient = &http.Client{
 		Transport: t,

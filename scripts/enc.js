@@ -2,7 +2,7 @@
 
 const XOR_KEY = process.env.XOR_KEY || "s3cr3t_k3y_pr0xy";
 // paste your m3u8 below :
-const DEFAULT_URL = "https://get.mediacache.cc/episode/I35iIyC2/0DsN4Kb7/sczeR0vi/6a223e5e67dd3a16484c4d86c6f38717_hi-IN/master.m3u8?sign=Dpau9bJJOXHc981ItRtjyA&expires=1774875398";
+const DEFAULT_URL = "https://vibeplayer.site/public/stream/94ecb94bae0e3439/master.m3u8";
 
 const url = process.argv[2] || DEFAULT_URL;
 
