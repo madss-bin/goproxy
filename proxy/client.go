@@ -11,7 +11,6 @@ var httpClient *http.Client
 func init() {
 	t := http.DefaultTransport.(*http.Transport).Clone()
 	t.MaxIdleConns = 2000
-	t.MaxConnsPerHost = 500
 	t.MaxIdleConnsPerHost = 500
 	t.IdleConnTimeout = 60 * time.Second
 	t.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
