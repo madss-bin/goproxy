@@ -17,7 +17,7 @@ COPY --from=builder /app/goproxy /app/goproxy
 COPY .env* ./
 
 ENV GOMEMLIMIT=1000MiB
-ENV GOGC=100
+ENV GOGC=off
 
 EXPOSE 8080
 CMD ["./goproxy"]
